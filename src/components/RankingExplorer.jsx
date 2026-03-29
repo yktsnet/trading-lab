@@ -22,9 +22,9 @@ function PipsBar({ value, max }) {
   const pct = Math.min(Math.abs(value) / Math.max(max, 1) * 100, 100)
   const positive = value >= 0
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <div style={{
-        width: 80, height: 4,
+        width: 60, height: 4,
         background: 'var(--border)',
         borderRadius: 2, overflow: 'hidden', flexShrink: 0,
       }}>
@@ -35,9 +35,9 @@ function PipsBar({ value, max }) {
         }} />
       </div>
       <span style={{
-        fontSize: 13, fontWeight: 600,
+        fontSize: 12, fontWeight: 600,
         color: positive ? 'var(--success)' : 'var(--fail)',
-        minWidth: 54, textAlign: 'right',
+        minWidth: 44, textAlign: 'right',
       }}>
         {value > 0 ? '+' : ''}{value?.toFixed(1)}
       </span>
@@ -65,7 +65,6 @@ export default function RankingExplorer() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* Section header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
           width: 3, height: 20,
@@ -78,9 +77,9 @@ export default function RankingExplorer() {
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Session tabs */}
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {SESSIONS.map(s => {
             const m = SESSION_META[s]
             const active = session === s
@@ -90,8 +89,8 @@ export default function RankingExplorer() {
                 key={s}
                 onClick={() => setSession(s)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 7,
-                  padding: '7px 14px',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 12px',
                   fontSize: 12, fontWeight: active ? 700 : 400,
                   letterSpacing: '0.06em',
                   color: active ? m.color : 'var(--dim)',
@@ -99,11 +98,14 @@ export default function RankingExplorer() {
                   border: `1px solid ${active ? m.color + '66' : 'var(--border2)'}`,
                   borderRadius: 4,
                   transition: 'all 0.1s',
+                  flex: '1 1 auto',
+                  justifyContent: 'center',
+                  maxWidth: 140,
                 }}
               >
-                <Icon size={13} strokeWidth={active ? 2.5 : 2} />
+                <Icon size={12} strokeWidth={active ? 2.5 : 2} />
                 {m.label}
-                <span style={{ fontSize: 10, color: active ? m.color + 'aa' : 'var(--muted)' }}>
+                <span className="session-hours" style={{ fontSize: 10, color: active ? m.color + 'aa' : 'var(--muted)' }}>
                   {m.hours}
                 </span>
               </button>
@@ -138,9 +140,7 @@ export default function RankingExplorer() {
 
       {/* Table */}
       <div style={{ border: '1px solid var(--border2)', background: 'var(--panel)' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '44px 80px 1fr 110px 140px 90px',
+        <div className="rank-grid" style={{
           padding: '8px 16px',
           borderBottom: '1px solid var(--border)',
           fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em',
@@ -148,8 +148,8 @@ export default function RankingExplorer() {
           <span>#</span>
           <span>type</span>
           <span>strategy</span>
-          <span style={{ textAlign: 'right' }}>entries</span>
-          <span>pips total</span>
+          <span className="col-entries" style={{ textAlign: 'right' }}>entries</span>
+          <span className="col-bar">pips total</span>
           <span style={{ textAlign: 'right' }}>avg/entry</span>
         </div>
 
@@ -161,23 +161,26 @@ export default function RankingExplorer() {
 
         {!loading && rows.length === 0 && (
           <div style={{ padding: '24px 16px', color: 'var(--muted)', textAlign: 'center', fontSize: 13 }}>
-            <AlertTriangle size={16} style={{ marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
-            No data. Run S8 first.
+            <AlertTriangle size={16} style={{ display: 'block', margin: '0 auto 8px' }} />
+            No data.
           </div>
         )}
 
         {!loading && rows.map((r, i) => {
           const color = tidColor(r.id)
-          const rankIcon = i === 0 ? <Trophy size={13} color="#ffcb6b" /> : i === 1 ? <Trophy size={13} color="#b2ccd6" /> : i === 2 ? <Trophy size={13} color="#f78c6c" /> : null
+          const rankIcon = i === 0 ? <Trophy size={13} color="#ffcb6b" />
+            : i === 1 ? <Trophy size={13} color="#b2ccd6" />
+            : i === 2 ? <Trophy size={13} color="#f78c6c" />
+            : null
           return (
-            <div key={`${r.id}-${r.slug}`} style={{
-              display: 'grid',
-              gridTemplateColumns: '44px 80px 1fr 110px 140px 90px',
-              padding: '10px 16px',
-              borderBottom: i < rows.length - 1 ? '1px solid var(--border)' : 'none',
-              alignItems: 'center',
-              transition: 'background 0.1s',
-            }}
+            <div key={`${r.id}-${r.slug}`}
+              className="rank-grid"
+              style={{
+                padding: '10px 16px',
+                borderBottom: i < rows.length - 1 ? '1px solid var(--border)' : 'none',
+                alignItems: 'center',
+                transition: 'background 0.1s',
+              }}
               onMouseEnter={e => e.currentTarget.style.background = '#ffffff05'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
@@ -191,27 +194,30 @@ export default function RankingExplorer() {
 
               <span style={{
                 display: 'inline-block',
-                padding: '2px 8px', fontSize: 11, fontWeight: 700,
+                padding: '2px 6px', fontSize: 11, fontWeight: 700,
                 color, background: color + '18',
                 border: `1px solid ${color}44`,
-                borderRadius: 3, letterSpacing: '0.04em',
+                borderRadius: 3,
               }}>
                 {r.id}
               </span>
 
-              <span style={{ color: 'var(--text)', fontSize: 12 }}>
+              <span style={{ color: 'var(--text)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.slug?.replace(/_/g, ' ')}
               </span>
 
-              <span style={{ textAlign: 'right', color: 'var(--dim)', fontSize: 12 }}>
+              <span className="col-entries" style={{ textAlign: 'right', color: 'var(--dim)', fontSize: 12 }}>
                 {Number(r.entries_total)?.toLocaleString()}
               </span>
 
-              <PipsBar value={r.pips_sum_total} max={maxPipsSum} />
+              <span className="col-bar">
+                <PipsBar value={r.pips_sum_total} max={maxPipsSum} />
+              </span>
 
               <span style={{
                 textAlign: 'right', fontSize: 13, fontWeight: 600,
                 color: (r.pips_avg_per_entry || 0) >= 0 ? 'var(--success)' : 'var(--fail)',
+                whiteSpace: 'nowrap',
               }}>
                 {r.pips_avg_per_entry > 0 ? '+' : ''}{Number(r.pips_avg_per_entry)?.toFixed(2)}
               </span>
@@ -225,6 +231,21 @@ export default function RankingExplorer() {
           {rows.length} strategies · last 12 months
         </div>
       )}
+
+      <style>{`
+        .rank-grid {
+          display: grid;
+          grid-template-columns: 36px 70px 1fr 90px 130px 80px;
+        }
+        @media (max-width: 600px) {
+          .rank-grid {
+            grid-template-columns: 24px 44px 1fr 64px;
+          }
+          .col-entries { display: none; }
+          .col-bar { display: none; }
+          .session-hours { display: none; }
+        }
+      `}</style>
     </div>
   )
 }
