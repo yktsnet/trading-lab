@@ -69,17 +69,6 @@ USDJPY ロング固定（10万通貨、avgOpen 149.234）。
 
 実装は非公開の dotfiles リポジトリで管理。バックテストパイプラインは NixOS + Python + systemd timer、ブローカー接続は国内外の FX ブローカー API を使用。
 
-### Tech Stack
-
-| Layer | Tech |
-|---|---|
-| Frontend | React + Vite |
-| Icons | Lucide React |
-| Styling | CSS Variables (Poimandres palette) |
-| Deploy | Cloudflare Pages |
-| Backend (prod) | FastAPI + uvicorn |
-| Infra (prod) | NixOS, systemd, autossh, Tailscale |
-
 </details>
 
 ---
