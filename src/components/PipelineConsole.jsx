@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
-  CheckCircle, XCircle, Loader, Clock,
+  Loader, Clock,
   Download, Package, Microscope, Dna, Zap, Ban,
   Wrench, DollarSign, BarChart, Trophy,
   Play, ChevronDown, ChevronUp, X,
@@ -34,7 +34,7 @@ function isRecent(iso) {
   return iso && (Date.now() - new Date(iso)) < 15 * 60 * 1000
 }
 
-// ── S8 Config ─────────────────────────────────────────────
+// ─── S8 Config ────────────────────────────────────────────
 
 const S8_PARAMS = [
   {
@@ -88,7 +88,7 @@ function S8Config({ onRunComplete }) {
           width: '100%', display: 'flex', alignItems: 'center', gap: 10,
           padding: '12px 16px', background: 'var(--panel)',
           fontSize: 11, letterSpacing: '0.10em', color: 'var(--dim)',
-          WebkitTapHighlightColor: 'transparent',
+          WebkitTapHighlightColor: 'transparent', outline: 'none',
         }}
       >
         <div style={{ width: 3, height: 13, background: 'var(--warn)', borderRadius: 2 }} />
@@ -113,7 +113,7 @@ function S8Config({ onRunComplete }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
             {S8_PARAMS.map(p => {
-              const v   = values[p.key]
+              const v = values[p.key]
               const pct = ((v - p.min) / (p.max - p.min)) * 100
               const Icon = p.Icon
               return (
@@ -164,6 +164,7 @@ function S8Config({ onRunComplete }) {
               border: 'none', borderRadius: 5,
               fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
               opacity: runState === 'running' ? 0.7 : 1,
+              WebkitTapHighlightColor: 'transparent', outline: 'none',
             }}
           >
             <Play size={13} />
@@ -175,23 +176,34 @@ function S8Config({ onRunComplete }) {
   )
 }
 
-// ── Stage row ─────────────────────────────────────────────
+// ─── Stage row ────────────────────────────────────────────
 
 function StageRow({ stage, last, mobile }) {
-  const [runState, setRunState] = useState(null)
-  const [logOpen,  setLogOpen]  = useState(false)
+  const [runState, setRunState]     = useState(null)   // null | 'running' | {ok} | {err, log}
+  const [logOpen, setLogOpen]       = useState(false)   // セッション中エラーのログ開閉
+  const [savedLog, setSavedLog]     = useState(null)    // 既存 failed のログ文字列
+  const [savedOpen, setSavedOpen]   = useState(false)   // 既存 failed のログ開閉
+
   const meta = STAGE_META[stage.id] || { icon: Zap, color: 'var(--dim)', desc: '' }
   const Icon = meta.icon
 
   const isRunning = runState === 'running'
   const isOk      = runState?.ok
   const isErr     = runState?.err
-  const resultColor = stage.result === 'success' ? 'var(--success)'
-                    : stage.result === 'failed'  ? 'var(--fail)'
-                    : 'var(--muted)'
+
+  // ページ読み込み時点で failed なら自動ログ取得
+  useEffect(() => {
+    if (stage.result === 'failed') {
+      fetchLog(stage.id)
+        .then(r => { if (r?.log) setSavedLog(r.log) })
+        .catch(() => {})
+    }
+  }, [stage.id, stage.result])
 
   async function handleRun() {
     if (isRunning) return
+    // 既存ログ表示をリセット
+    setSavedOpen(false)
     setRunState('running')
     try {
       await triggerRun(stage.id)
@@ -200,10 +212,20 @@ function StageRow({ stage, last, mobile }) {
       let log = ''
       try { const r = await fetchLog(stage.id); log = r.log || '' } catch {}
       setRunState({ err: true, at: new Date(), log })
+      setLogOpen(true)   // ← 失敗したら即ログを開く
     }
   }
 
+  const resultColor = stage.result === 'success' ? 'var(--success)'
+                    : stage.result === 'failed'  ? 'var(--fail)'
+                    : 'var(--muted)'
+
   const gridCols = mobile ? '1fr auto auto' : '140px 1fr 70px 90px 80px'
+
+  // ログパネルを表示すべきか
+  const showSessionLog = isErr && logOpen && runState?.log
+  const showSavedLog   = stage.result === 'failed' && !isErr && !isOk && savedOpen && savedLog
+  const anyLogOpen     = showSessionLog || showSavedLog
 
   return (
     <>
@@ -214,17 +236,18 @@ function StageRow({ stage, last, mobile }) {
           display: 'grid', gridTemplateColumns: gridCols,
           alignItems: 'center', gap: mobile ? 8 : 12,
           padding: mobile ? '10px 12px' : '10px 16px',
-          borderBottom: last && !logOpen ? 'none' : '1px solid var(--border)',
-          background: isErr ? '#f0717808' : 'transparent',
+          borderBottom: last && !anyLogOpen ? 'none' : '1px solid var(--border)',
+          background: (isErr || (stage.result === 'failed' && !isOk)) ? '#f0717808' : 'transparent',
           cursor: isRunning ? 'default' : 'pointer',
-          transition: 'background 0.1s',
         }}
       >
+        {/* Stage label */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <Icon size={13} color={meta.color} strokeWidth={2} />
           <span style={{ color: meta.color, fontWeight: 600, fontSize: mobile ? 12 : 13 }}>{stage.label}</span>
         </div>
 
+        {/* Description (PC only) */}
         {!mobile && (
           <span style={{ color: isErr ? 'var(--fail)' : 'var(--dim)', fontSize: 13 }}>
             {isRunning ? 'starting…'
@@ -234,6 +257,7 @@ function StageRow({ stage, last, mobile }) {
           </span>
         )}
 
+        {/* Last run (PC only) */}
         {!mobile && (
           <div style={{
             textAlign: 'right', fontSize: 11,
@@ -244,6 +268,7 @@ function StageRow({ stage, last, mobile }) {
           </div>
         )}
 
+        {/* Result */}
         <div style={{ textAlign: 'right' }}>
           {stage.currently_running ? (
             <span style={{ fontSize: 10, color: 'var(--running)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -258,21 +283,31 @@ function StageRow({ stage, last, mobile }) {
           )}
         </div>
 
+        {/* Action */}
         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+          {/* セッション中エラー: ログ開閉 + クリア */}
           {isErr && (
             <>
               {runState.log && (
                 <button onClick={e => { e.stopPropagation(); setLogOpen(o => !o) }}
-                  style={{ fontSize: 10, color: 'var(--fail)', padding: '2px 6px', border: '1px solid #f0717833', borderRadius: 3 }}>
+                  style={{ fontSize: 10, color: 'var(--fail)', padding: '2px 6px', border: '1px solid #f0717833', borderRadius: 3, outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
                   {logOpen ? <ChevronUp size={9}/> : <ChevronDown size={9}/>}
                 </button>
               )}
               <button onClick={e => { e.stopPropagation(); setRunState(null); setLogOpen(false) }}
-                style={{ color: 'var(--muted)', padding: '2px 3px' }}>
+                style={{ color: 'var(--muted)', padding: '2px 3px', outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
                 <X size={10}/>
               </button>
             </>
           )}
+          {/* 既存 failed: ログ開閉ボタン */}
+          {stage.result === 'failed' && !isErr && !isOk && savedLog && (
+            <button onClick={e => { e.stopPropagation(); setSavedOpen(o => !o) }}
+              style={{ fontSize: 10, color: 'var(--fail)', padding: '2px 6px', border: '1px solid #f0717833', borderRadius: 3, outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
+              {savedOpen ? <ChevronUp size={9}/> : <ChevronDown size={9}/>}
+            </button>
+          )}
+          {/* 通常の run ボタン */}
           {!isErr && (
             <span style={{
               fontSize: 11, padding: mobile ? '2px 8px' : '2px 10px',
@@ -286,7 +321,8 @@ function StageRow({ stage, last, mobile }) {
         </div>
       </div>
 
-      {isErr && logOpen && runState.log && (
+      {/* セッション中エラーのログ */}
+      {showSessionLog && (
         <div style={{
           padding: '10px 16px', background: '#0a0c14',
           borderBottom: last ? 'none' : '1px solid var(--border)',
@@ -295,18 +331,33 @@ function StageRow({ stage, last, mobile }) {
           <pre style={{
             fontSize: 11, color: '#f07178cc', lineHeight: 1.6,
             whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-            maxHeight: 160, overflowY: 'auto', margin: 0,
+            maxHeight: 200, overflowY: 'auto', margin: 0,
           }}>{runState.log}</pre>
+        </div>
+      )}
+
+      {/* 既存 failed のログ */}
+      {showSavedLog && (
+        <div style={{
+          padding: '10px 16px', background: '#0a0c14',
+          borderBottom: last ? 'none' : '1px solid var(--border)',
+          borderTop: '1px solid #f0717822',
+        }}>
+          <pre style={{
+            fontSize: 11, color: '#f07178cc', lineHeight: 1.6,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+            maxHeight: 200, overflowY: 'auto', margin: 0,
+          }}>{savedLog}</pre>
         </div>
       )}
     </>
   )
 }
 
-// ── PipelineConsole ───────────────────────────────────────
+// ─── PipelineConsole ──────────────────────────────────────
 
 export default function PipelineConsole({ stages, loading, onRunComplete }) {
-  const mobile       = typeof window !== 'undefined' && window.innerWidth <= 700
+  const mobile = typeof window !== 'undefined' && window.innerWidth <= 700
   const successCount = stages.filter(s => s.result === 'success').length
 
   return (
@@ -348,10 +399,7 @@ export default function PipelineConsole({ stages, loading, onRunComplete }) {
 
       <S8Config onRunComplete={onRunComplete} />
 
-      <style>{`
-        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        .stage-row:hover { background: #ffffff05 !important; }
-      `}</style>
+      <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
     </div>
   )
 }

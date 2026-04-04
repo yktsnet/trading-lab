@@ -82,17 +82,22 @@ for (const s of ['tyo', 'lon', 'nyc']) {
 }
 
 // ── パイプラインステージ ──────────────────────────────────
+// last_run は実行時の現在時刻から相対計算（ページ読み込みのたびに「N時間前」が正しく出る）
+function ago(hours, minutes = 0) {
+  return new Date(Date.now() - (hours * 3600 + minutes * 60) * 1000).toISOString()
+}
+
 const STAGES = [
-  { id: 's1-append',  label: 'S1 append',  description: 'ops2 → OHLC JSONL',        result: 'success', last_run: '2026-04-04T17:05:02Z', currently_running: false, active_state: 'inactive' },
-  { id: 's1-export',  label: 'S1 export',  description: 'JSONL → Parquet',           result: 'success', last_run: '2026-04-04T17:10:08Z', currently_running: false, active_state: 'inactive' },
-  { id: 's1-enrich',  label: 'S1 enrich',  description: '特徴量焼き込み',            result: 'success', last_run: '2026-04-04T17:21:34Z', currently_running: false, active_state: 'inactive' },
-  { id: 's2-gen',     label: 'S2 gen',     description: '戦略パラメータ生成',        result: 'success', last_run: '2026-04-04T17:31:09Z', currently_running: false, active_state: 'inactive' },
-  { id: 's3-calc',    label: 'S3 calc',    description: 'エントリーフラグ計算',      result: 'success', last_run: '2026-04-05T00:00:47Z', currently_running: false, active_state: 'inactive' },
-  { id: 's4-ban',     label: 'S4 ban',     description: 'Banリスト生成',             result: 'success', last_run: '2026-04-05T00:16:22Z', currently_running: false, active_state: 'inactive' },
-  { id: 's5-engine',  label: 'S5 engine',  description: 'ポジションイベント計算',    result: 'success', last_run: '2026-04-05T00:31:58Z', currently_running: false, active_state: 'inactive' },
-  { id: 's6-pips',    label: 'S6 pips',    description: 'pips付与',                  result: 'success', last_run: '2026-04-05T01:02:14Z', currently_running: false, active_state: 'inactive' },
-  { id: 's7-summary', label: 'S7 summary', description: '月次・四半期・年次集計',    result: 'success', last_run: '2026-04-05T01:17:33Z', currently_running: false, active_state: 'inactive' },
-  { id: 's8-rank',    label: 'S8 rank',    description: 'DDフィルタ・戦略ランキング',result: 'success', last_run: '2026-04-05T01:31:05Z', currently_running: false, active_state: 'inactive' },
+  { id: 's1-append',  label: 'S1 append',  description: 'ops2 → OHLC JSONL',        result: 'success', last_run: ago(14, 2),  currently_running: false, active_state: 'inactive' },
+  { id: 's1-export',  label: 'S1 export',  description: 'JSONL → Parquet',           result: 'success', last_run: ago(13, 57), currently_running: false, active_state: 'inactive' },
+  { id: 's1-enrich',  label: 'S1 enrich',  description: '特徴量焼き込み',            result: 'success', last_run: ago(13, 46), currently_running: false, active_state: 'inactive' },
+  { id: 's2-gen',     label: 'S2 gen',     description: '戦略パラメータ生成',        result: 'success', last_run: ago(13, 36), currently_running: false, active_state: 'inactive' },
+  { id: 's3-calc',    label: 'S3 calc',    description: 'エントリーフラグ計算',      result: 'failed',  last_run: ago(0, 28),  currently_running: false, active_state: 'inactive' },
+  { id: 's4-ban',     label: 'S4 ban',     description: 'Banリスト生成',             result: 'success', last_run: ago(7, 5),   currently_running: false, active_state: 'inactive' },
+  { id: 's5-engine',  label: 'S5 engine',  description: 'ポジションイベント計算',    result: 'success', last_run: ago(6, 51),  currently_running: false, active_state: 'inactive' },
+  { id: 's6-pips',    label: 'S6 pips',    description: 'pips付与',                  result: 'success', last_run: ago(6, 20),  currently_running: false, active_state: 'inactive' },
+  { id: 's7-summary', label: 'S7 summary', description: '月次・四半期・年次集計',    result: 'success', last_run: ago(5, 48),  currently_running: false, active_state: 'inactive' },
+  { id: 's8-rank',    label: 'S8 rank',    description: 'DDフィルタ・戦略ランキング',result: 'success', last_run: ago(5, 34),  currently_running: false, active_state: 'inactive' },
 ]
 
 // ── 決済履歴 (パネルを埋めるくらいの量) ─────────────────
