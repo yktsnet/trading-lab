@@ -1,21 +1,38 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Menu } from 'lucide-react'
 import { fetchStatus } from './lib/api.js'
 import Sidebar from './components/Sidebar.jsx'
 import Header from './components/Header.jsx'
-import PipelineStatus from './components/PipelineStatus.jsx'
-import RunConsole from './components/RunConsole.jsx'
 import RankingExplorer from './components/RankingExplorer.jsx'
-import ConfigConsole from './components/ConfigConsole.jsx'
+import LiveDashboard from './components/LiveDashboard.jsx'
+import StatePanel from './components/StatePanel.jsx'
+import PipelineConsole from './components/PipelineConsole.jsx'
+import { Satellite, Terminal, Activity, BarChart2 } from 'lucide-react'
+
+const MOBILE_NAV = [
+  { id: 'live',     icon: Satellite, label: 'Live'     },
+  { id: 'state',    icon: Terminal,  label: 'State'    },
+  { id: 'pipeline', icon: Activity,  label: 'Pipeline' },
+  { id: 'ranking',  icon: BarChart2, label: 'Ranking'  },
+]
 
 const POLL_MS = 15_000
 
+function isMobile() {
+  return typeof window !== 'undefined' && window.innerWidth <= 700
+}
+
 export default function App() {
-  const [page, setPage]           = useState('pipeline')
+  const [page, setPage]           = useState('live')
   const [stages, setStages]       = useState([])
   const [loading, setLoading]     = useState(true)
   const [connected, setConnected] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mobile, setMobile]       = useState(isMobile())
+
+  useEffect(() => {
+    const handler = () => setMobile(isMobile())
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   const refresh = useCallback(async () => {
     try {
@@ -35,76 +52,80 @@ export default function App() {
     return () => clearInterval(id)
   }, [refresh])
 
-  const successCount = stages.filter(s => s.result === 'success').length
+  const isFullHeight = !mobile && (page === 'live' || page === 'state')
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar
-        page={page}
-        setPage={setPage}
-        connected={connected}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      <Sidebar page={page} setPage={setPage} connected={connected} />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Top bar */}
-        <div style={{
-          height: 44,
-          borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 16px',
-          gap: 12,
-          background: 'var(--bg)',
-          flexShrink: 0,
-        }}>
-          {/* Hamburger - mobile only */}
-          <button
-            className="hamburger"
-            onClick={() => setSidebarOpen(true)}
-            style={{
-              display: 'none',
-              color: 'var(--dim)',
-              padding: 4,
-              flexShrink: 0,
-            }}
-          >
-            <Menu size={18} />
-          </button>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+        <Header
+          page={page}
+          stageCount={stages.length}
+          successCount={stages.filter(s => s.result === 'success').length}
+        />
 
-          <Header
-            page={page}
-            stageCount={stages.length}
-            successCount={successCount}
-            inline
-          />
+        <div
+          className="main-content"
+          style={{
+            flex: 1, minHeight: 0,
+            padding: isFullHeight ? '16px 16px 0' : '20px 20px 80px',
+            overflowY: isFullHeight ? 'hidden' : 'auto',
+            display: isFullHeight ? 'flex' : 'block',
+            flexDirection: 'column',
+          }}
+        >
+          {page === 'live'     && <LiveDashboard mobile={mobile} />}
+          {page === 'state'    && <StatePanel />}
+          {page === 'pipeline' && <PipelineConsole stages={stages} loading={loading} onRunComplete={refresh} />}
+          {page === 'ranking'  && <RankingExplorer />}
         </div>
 
-        {/* Content */}
-        <div style={{
-          flex: 1,
-          padding: '24px 20px',
-          overflowY: 'auto',
-          maxWidth: 1100,
-          width: '100%',
+        <div className="desktop-footer" style={{
+          borderTop: '1px solid var(--border)', padding: '6px 20px',
+          fontSize: 11, color: 'var(--muted)', display: 'flex', gap: 16,
+          background: 'var(--bg)', flexShrink: 0,
         }}>
-          {page === 'pipeline' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <PipelineStatus stages={stages} loading={loading} />
-              <RunConsole stages={stages} onRunComplete={refresh} />
-            </div>
-          )}
-          {page === 'ranking' && <RankingExplorer />}
-          {page === 'config'  && <ConfigConsole onRunComplete={refresh} />}
+          <span>Trading Lab</span>
+          <span style={{ color: 'var(--border2)' }}>│</span>
+          <span>price <span style={{ color: 'var(--dim)' }}>3s</span></span>
+          <span>positions <span style={{ color: 'var(--dim)' }}>60s</span></span>
+          <span>bars / state <span style={{ color: 'var(--dim)' }}>5m</span></span>
+        </div>
+
+        {/* Mobile bottom nav */}
+        <div className="mobile-nav" style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          background: 'var(--bg)', borderTop: '1px solid var(--border2)',
+          display: 'none', justifyContent: 'space-around', alignItems: 'stretch',
+          zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)',
+        }}>
+          {MOBILE_NAV.map(({ id, icon: Icon, label }) => {
+            const active = page === id
+            return (
+              <button
+                key={id}
+                onClick={() => setPage(id)}
+                style={{
+                  flex: 1, display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  padding: '9px 4px', gap: 3,
+                  color: active ? 'var(--accent)' : 'var(--muted)',
+                  background: 'none',
+                  borderTop: active ? '2px solid var(--accent)' : '2px solid transparent',
+                  outline: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                <span style={{ fontSize: 9, letterSpacing: '0.04em', fontWeight: active ? 700 : 400 }}>
+                  {label.toUpperCase()}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 700px) {
-          .hamburger { display: flex !important; }
-        }
-      `}</style>
     </div>
   )
 }

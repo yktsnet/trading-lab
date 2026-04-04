@@ -1,28 +1,26 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0d0f17;
-  --bg2:       #080a10;
-  --panel:     #111520;
-  --panel2:    #161b2e;
-  --border:    #1e2235;
-  --border2:   #2a3050;
-  --muted:     #3d4a6b;
-  --dim:       #5a6a94;
-  --text:      #8892b0;
-  --bright:    #ccd6f6;
-  --focus:     #e6f1ff;
-  --accent:    #5de4c7;
-  --accent2:   #89ddff;
-  --success:   #5de4c7;
-  --fail:      #f07178;
-  --warn:      #ffcb6b;
-  --running:   #82aaff;
-  --purple:    #c792ea;
-  --orange:    #f78c6c;
+  --bg:      #0d0f17;
+  --bg2:     #080a10;
+  --panel:   #111520;
+  --panel2:  #161b2e;
+  --border:  #1e2235;
+  --border2: #2a3050;
+  --muted:   #3d4a6b;
+  --dim:     #5a6a94;
+  --text:    #8892b0;
+  --bright:  #ccd6f6;
+  --accent:  #5de4c7;
+  --accent2: #89ddff;
+  --success: #5de4c7;
+  --fail:    #f07178;
+  --warn:    #ffcb6b;
+  --running: #82aaff;
+  --purple:  #c792ea;
+  --orange:  #f78c6c;
   --fn: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', ui-monospace, monospace;
-
-  --sidebar-w: 220px;
+  --sidebar-w: 200px;
 }
 
 html, body, #root {
@@ -41,13 +39,34 @@ button {
   border: none;
   background: none;
   color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  outline: none;
+  user-select: none;
 }
 
-input, select {
-  font-family: var(--fn);
-  font-size: 13px;
-}
+input, select { font-family: var(--fn); font-size: 13px; }
 
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .stage-row:hover { background: #ffffff05 !important; }
+  .rank-row:hover  { background: #ffffff05 !important; }
+}
+
+@media (max-width: 480px) {
+  .live-top-row { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 700px) {
+  .sidebar        { display: none !important; }
+  .mobile-nav     { display: flex !important; }
+  .desktop-footer { display: none !important; }
+  .main-content   { padding: 12px 10px 72px !important; }
+}
+
+@media (max-width: 480px) {
+  :root { font-size: 13px; }
+}
