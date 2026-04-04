@@ -23,7 +23,7 @@ React + Vite 製、Cloudflare Pages でホスト。
 
 | ページ | 内容 |
 |---|---|
-| **Live** | 現在価格・ポジション・決済履歴・5分足バー |
+| **Live** | 現在価格・ポジション・決済履歴・5分足バー・レイテンシー/フレッシュネスグラフ |
 | **State** | 注文送信キュー・エントリー・送信済み・エラー等の実行ログ |
 | **Pipeline** | S1〜S8 バックテストパイプラインの状態と手動実行 |
 | **Ranking** | セッション別（TYO / LON / NYC）戦略ランキング、DDフィルタ適用済み |
@@ -48,6 +48,9 @@ USDJPY ロング固定（10万通貨、avgOpen 149.234）。
 
 **ランキング**
 ハードコードされた架空の戦略スコアです。実際のバックテスト結果とは無関係です。
+
+**メトリクス（Latency / Freshness）**
+固定シード乱数で生成した架空の時系列データです。本番環境では注文レイテンシーとバーデータの遅延をリアルタイムで表示します。
 
 ### 本番構成（非公開）
 
@@ -77,7 +80,7 @@ USDJPY ロング固定（10万通貨、avgOpen 149.234）。
 
 | Page | Content |
 |---|---|
-| **Live** | Current price, open position, closed trades, 5m OHLC bars |
+| **Live** | Current price, open position, closed trades, 5m OHLC bars, latency/freshness charts |
 | **State** | Execution queue, entries, sent orders, errors, EOD/event/spark snaps |
 | **Pipeline** | S1–S8 backtest pipeline status and manual triggers |
 | **Ranking** | Strategy ranking by session (TYO / LON / NYC) with DD filter |
@@ -101,6 +104,9 @@ Stage run buttons are mocked (resolve after ~0.9s). S8 parameter sliders save to
 
 **Ranking**
 Hardcoded fictional strategy scores across TYO / LON / NYC sessions.
+
+**Metrics (Latency / Freshness)**
+Seeded random time-series data. In production, shows real order latency and bar data freshness.
 
 ## Production setup (private)
 

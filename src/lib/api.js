@@ -253,3 +253,29 @@ export async function fetchLiveState(_limit = 200) {
   await delay(80)
   return MOCK_STATE
 }
+
+// ── メトリクスモックデータ ─────────────────────────────────
+function generateMetrics() {
+  const rand = seededRand(0xdeadbeef)
+  const latency = []
+  const bar_lag = []
+  for (let i = 0; i < 80; i++) {
+    const base = 20 + rand() * 15
+    const spike = rand() > 0.9 ? rand() * 60 : 0
+    latency.push({ v: +(base + spike).toFixed(1) })
+    const lag = rand() > 0.7
+      ? 200 + rand() * 100
+      : rand() > 0.4
+        ? 100 + rand() * 100
+        : rand() * 100
+    bar_lag.push({ v: +(lag).toFixed(1) })
+  }
+  return { latency, bar_lag }
+}
+
+const MOCK_METRICS = generateMetrics()
+
+export async function fetchLiveMetrics() {
+  await delay(80)
+  return MOCK_METRICS
+}
