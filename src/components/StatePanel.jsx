@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Terminal, AlertTriangle, Zap, Clock, Radio, Layers, Send, Inbox } from 'lucide-react'
 import { fetchLiveState } from '../lib/api.js'
+import HintBanner from './HintBanner.jsx'
 
 const POLL_MS  = 5 * 60_000
 const MOBILE_BP = 700
@@ -209,6 +210,13 @@ export default function StatePanel() {
         </span>
         <span style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 10 }}>5min</span>
       </div>
+
+      {/* ヒントバナー */}
+      <HintBanner
+        hintKey="state"
+        color="var(--purple)"
+        body="自動売買エンジンが出力するログファイルをリアルタイムで表示します。Outbox は送信待ちの注文、Entries は検出したエントリーシグナル、Sent は送信済みの注文、Errors はエラー履歴。EOD / Event / Spark は各種スナップショットのイベントログです。"
+      />
 
       {firstLoad ? (
         <div style={{ color: 'var(--muted)', fontSize: FS }}>connecting…</div>

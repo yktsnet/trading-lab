@@ -7,6 +7,7 @@ import {
   TrendingDown, CalendarDays, Target, Info,
 } from 'lucide-react'
 import { triggerRun, fetchLog, fetchConfig, saveConfig } from '../lib/api.js'
+import HintBanner from './HintBanner.jsx'
 
 const STAGE_META = {
   's1-append':  { icon: Download,   color: '#89ddff', desc: 'ops2 → OHLC JSONL'       },
@@ -179,10 +180,10 @@ function S8Config({ onRunComplete }) {
 // ─── Stage row ────────────────────────────────────────────
 
 function StageRow({ stage, last, mobile }) {
-  const [runState, setRunState]     = useState(null)   // null | 'running' | {ok} | {err, log}
-  const [logOpen, setLogOpen]       = useState(false)   // セッション中エラーのログ開閉
-  const [savedLog, setSavedLog]     = useState(null)    // 既存 failed のログ文字列
-  const [savedOpen, setSavedOpen]   = useState(false)   // 既存 failed のログ開閉
+  const [runState, setRunState]     = useState(null)
+  const [logOpen, setLogOpen]       = useState(false)
+  const [savedLog, setSavedLog]     = useState(null)
+  const [savedOpen, setSavedOpen]   = useState(false)
 
   const meta = STAGE_META[stage.id] || { icon: Zap, color: 'var(--dim)', desc: '' }
   const Icon = meta.icon
@@ -191,7 +192,6 @@ function StageRow({ stage, last, mobile }) {
   const isOk      = runState?.ok
   const isErr     = runState?.err
 
-  // ページ読み込み時点で failed なら自動ログ取得
   useEffect(() => {
     if (stage.result === 'failed') {
       fetchLog(stage.id)
@@ -202,7 +202,6 @@ function StageRow({ stage, last, mobile }) {
 
   async function handleRun() {
     if (isRunning) return
-    // 既存ログ表示をリセット
     setSavedOpen(false)
     setRunState('running')
     try {
@@ -212,7 +211,7 @@ function StageRow({ stage, last, mobile }) {
       let log = ''
       try { const r = await fetchLog(stage.id); log = r.log || '' } catch {}
       setRunState({ err: true, at: new Date(), log })
-      setLogOpen(true)   // ← 失敗したら即ログを開く
+      setLogOpen(true)
     }
   }
 
@@ -222,7 +221,6 @@ function StageRow({ stage, last, mobile }) {
 
   const gridCols = mobile ? '1fr auto auto' : '140px 1fr 70px 90px 80px'
 
-  // ログパネルを表示すべきか
   const showSessionLog = isErr && logOpen && runState?.log
   const showSavedLog   = stage.result === 'failed' && !isErr && !isOk && savedOpen && savedLog
   const anyLogOpen     = showSessionLog || showSavedLog
@@ -241,13 +239,11 @@ function StageRow({ stage, last, mobile }) {
           cursor: isRunning ? 'default' : 'pointer',
         }}
       >
-        {/* Stage label */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <Icon size={13} color={meta.color} strokeWidth={2} />
           <span style={{ color: meta.color, fontWeight: 600, fontSize: mobile ? 12 : 13 }}>{stage.label}</span>
         </div>
 
-        {/* Description (PC only) */}
         {!mobile && (
           <span style={{ color: isErr ? 'var(--fail)' : 'var(--dim)', fontSize: 13 }}>
             {isRunning ? 'starting…'
@@ -257,7 +253,6 @@ function StageRow({ stage, last, mobile }) {
           </span>
         )}
 
-        {/* Last run (PC only) */}
         {!mobile && (
           <div style={{
             textAlign: 'right', fontSize: 11,
@@ -268,7 +263,6 @@ function StageRow({ stage, last, mobile }) {
           </div>
         )}
 
-        {/* Result */}
         <div style={{ textAlign: 'right' }}>
           {stage.currently_running ? (
             <span style={{ fontSize: 10, color: 'var(--running)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -283,9 +277,7 @@ function StageRow({ stage, last, mobile }) {
           )}
         </div>
 
-        {/* Action */}
         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-          {/* セッション中エラー: ログ開閉 + クリア */}
           {isErr && (
             <>
               {runState.log && (
@@ -300,14 +292,12 @@ function StageRow({ stage, last, mobile }) {
               </button>
             </>
           )}
-          {/* 既存 failed: ログ開閉ボタン */}
           {stage.result === 'failed' && !isErr && !isOk && savedLog && (
             <button onClick={e => { e.stopPropagation(); setSavedOpen(o => !o) }}
               style={{ fontSize: 10, color: 'var(--fail)', padding: '2px 6px', border: '1px solid #f0717833', borderRadius: 3, outline: 'none', WebkitTapHighlightColor: 'transparent' }}>
               {savedOpen ? <ChevronUp size={9}/> : <ChevronDown size={9}/>}
             </button>
           )}
-          {/* 通常の run ボタン */}
           {!isErr && (
             <span style={{
               fontSize: 11, padding: mobile ? '2px 8px' : '2px 10px',
@@ -321,7 +311,6 @@ function StageRow({ stage, last, mobile }) {
         </div>
       </div>
 
-      {/* セッション中エラーのログ */}
       {showSessionLog && (
         <div style={{
           padding: '10px 16px', background: '#0a0c14',
@@ -336,7 +325,6 @@ function StageRow({ stage, last, mobile }) {
         </div>
       )}
 
-      {/* 既存 failed のログ */}
       {showSavedLog && (
         <div style={{
           padding: '10px 16px', background: '#0a0c14',
@@ -372,6 +360,13 @@ export default function PipelineConsole({ stages, loading, onRunComplete }) {
           </span>
         )}
       </div>
+
+      {/* ヒントバナー */}
+      <HintBanner
+        hintKey="pipeline"
+        color="var(--accent)"
+        body="過去の相場データを使って戦略をテストする「バックテスト」を S1〜S8 の8ステージで管理します。S1 で生データを取得・整形し、S2〜S3 でシグナルを生成、S5〜S6 で損益を計算、S8 で戦略をランキングします。各行をクリックすると手動で再実行できます。"
+      />
 
       <div style={{ border: '1px solid var(--border2)', background: 'var(--panel)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{

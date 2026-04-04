@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TrendingUp, Sigma, Trophy, AlertTriangle, JapaneseYen, Euro, DollarSign } from 'lucide-react'
 import { fetchRanking } from '../lib/api.js'
+import HintBanner from './HintBanner.jsx'
 
 const SESSIONS = ['tyo', 'lon', 'nyc']
 const SESSION_META = {
@@ -52,6 +53,8 @@ export default function RankingExplorer() {
   const rows       = sortBy === 'avg' ? data.avg : data.sum
   const maxPipsSum = Math.max(...rows.map(r => Math.abs(r.pips_sum_total || 0)), 1)
 
+  const sessionColor = SESSION_META[session]?.color || 'var(--warn)'
+
   const gridCols = mobile
     ? '28px 52px 1fr 56px'
     : '36px 60px 1fr 70px minmax(130px,160px) 72px'
@@ -62,6 +65,13 @@ export default function RankingExplorer() {
         <div style={{ width: 3, height: 20, background: 'linear-gradient(180deg, var(--warn) 0%, var(--orange) 100%)', borderRadius: 2 }} />
         <span style={{ fontSize: 11, letterSpacing: '0.12em', color: 'var(--dim)' }}>STRATEGY RANKING</span>
       </div>
+
+      {/* ヒントバナー */}
+      <HintBanner
+        hintKey="ranking"
+        color="var(--warn)"
+        body="数百通りのパラメータ組み合わせをバックテストした結果をランキング形式で表示します。東京・ロンドン・ニューヨークの各取引時間帯ごとに比較でき、「avg/entry」は1トレードあたりの平均獲得pips、「pips total」は累計損益です。上部のトグルで並び順を切り替えられます。"
+      />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         {/* Session tabs */}

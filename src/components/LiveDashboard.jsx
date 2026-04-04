@@ -4,6 +4,7 @@ import {
   Shield, ShieldOff, Activity, BarChart2, AlertTriangle, Info, X,
 } from 'lucide-react'
 import { fetchLivePrice, fetchLivePositions, fetchLiveBars } from '../lib/api.js'
+import HintBanner from './HintBanner.jsx'
 
 function usePolled(fn, intervalMs) {
   const [data, setData]           = useState(null)
@@ -147,6 +148,13 @@ function PositionsPanel({ posData, priceData, mobile }) {
             </span>
           </div>
         }
+      />
+
+      {/* ヒントバナー */}
+      <HintBanner
+        hintKey="positions"
+        color="var(--success)"
+        body="自動売買システムが現在保有している USDJPY のポジションと、リアルタイムの含み損益を表示します。下の一覧は本日すでに決済が完了したトレードの履歴です。"
       />
 
       {/* 現在価格 */}
@@ -327,6 +335,13 @@ function BarsPanel({ data, firstLoad, mobile }) {
             </div>
           </div>
         }
+      />
+
+      {/* ヒントバナー */}
+      <HintBanner
+        hintKey="bars"
+        color="var(--accent2)"
+        body="為替レートの値動きをローソク足（OHLC）で表示します。上部のボタンで時間足を切り替え可能。ATR はボラティリティ（値動きの大きさ）、ADX はトレンドの強さを示す指標です。"
       />
 
       {firstLoad ? (
