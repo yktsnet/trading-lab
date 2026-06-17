@@ -3,7 +3,7 @@
 A demo of a backtesting pipeline and live trading console for an automated FX system.
 **[→ Live Demo](https://trading-lab.pages.dev)**
 
-> **Note:** このデモのデータはすべて架空（合成データ）です。バックエンドへの接続はありません。動作の詳細は後述の [How the demo works](#how-the-demo-works) を参照してください。
+> **Note:** このデモのデータはすべて架空（合成データ）です。バックエンドへの接続はありません。
 
 ---
 
